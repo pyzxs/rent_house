@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/api/admin/logics/system.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/api/admin/params/system.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/api/admin/schemas/system_schemas.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/api/admin/views/system.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/base.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/curd.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/database.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/datatype.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/dependencies.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/event.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/exception.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/log.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/middleware.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/module.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/response.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/core/validator.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/models/data_dict.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/models/system.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/models/user.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/schedules/__init__.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/schedules/settings.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/schedules/tasks.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/scripts/initialize.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/scripts/scheduler.py" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/static/swagger-ui" charset="GBK" />
+  </component>
+</project>

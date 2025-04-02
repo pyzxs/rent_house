@@ -4,7 +4,7 @@
 # @File    ：setting.py
 # @Author  ：ben
 # @Date    ：2025/4/2 下午12:33 
-# @desc    : setting configuration
+# @desc    : settings configuration
 import os
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
