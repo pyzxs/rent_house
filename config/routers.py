@@ -10,5 +10,5 @@ from api.admin import *
 
 urlpatterns = [
     # admin system route
-    {"ApiRouter": adminSystemAPI, "prefix": "/api/admin/system", "tags": ["admin-permission manage"]},
+    {"ApiRouter": adminSystemAPI, "prefix": "/api/admin/system", "tags": ["Admin-System Manage"]},
 ]

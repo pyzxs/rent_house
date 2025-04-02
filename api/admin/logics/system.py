@@ -4,15 +4,18 @@
 # @Create Time    : 2025/2/14
 # @File           : system.py
 # @desc           : 系统管理模块
+from datetime import datetime
+
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+import models.user
 from api.admin.schemas import system_schemas
 from config import settings
 from core.curd import get_filter_where, order_by
 from core.exception import CustomException
-from models.data_dict import DictType
-from models.user import User, Role, Menu
+from models.user import User, Role, Menu, Department
 from utils import helpers
 
 
@@ -28,12 +31,16 @@ def create_user(db, form_data):
             form_data.password = settings.DEFAULT_PASSWORD
 
     form_data.password = User.get_password_hash(form_data.password)
-    form_data.avatar = form_data.avatar if form_data.avatar else settings.DEFAULT_AVATAR
-    user = User(**form_data.model_dump(exclude={'role_ids'}))
+    user = User(**form_data.model_dump(exclude={'role_ids', "dept_ids"}))
+
     if form_data.role_ids:
         roles = db.query(Role).filter(Role.id.in_(form_data.role_ids)).all()
         for role in roles:
             user.roles.add(role)
+    if form_data.dept_ids:
+        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+        for dept in departments:
+            user.departments.add(dept)
     db.add(user)
     db.commit()
 
@@ -54,8 +61,7 @@ def put_user(db, u, data_id, form_data):
             form_data.password = settings.DEFAULT_PASSWORD
 
     form_data.password = User.get_password_hash(form_data.password)
-    form_data.avatar = form_data.avatar if form_data.avatar else settings.DEFAULT_AVATAR
-    data = form_data.model_dump(exclude={'role_ids'})
+    data = form_data.model_dump(exclude={'role_ids', 'dept_ids'})
 
     for key, value in data.items():
         if key in User.get_column_attrs():
@@ -66,6 +72,12 @@ def put_user(db, u, data_id, form_data):
         user.roles.clear()
         for role in roles:
             user.roles.add(role)
+
+    if form_data.dept_ids:
+        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+        user.departments.clear()
+        for dept in departments:
+            user.departments.add(dept)
     db.commit()
 
 
@@ -133,16 +145,23 @@ def put_role(db, u, data_id, form_data):
     if exists:
         raise CustomException(f"已存在角色{form_data.role_key}")
 
-    data = form_data.model_dump(exclude={'menu_ids'})
+    data = form_data.model_dump(exclude={'menu_ids', 'dept_ids'})
     for key, value in data.items():
         if key in Role.get_column_attrs():
             setattr(role, key, value)  # 使用setattr动态设置属性
 
-    role.menus.clear()
     if form_data.menu_ids:
+        role.menus.clear()
         menus = db.query(Menu).filter(Menu.id.in_(form_data.menu_ids)).all()
         for menu in menus:
             role.menus.add(menu)
+
+    if form_data.dept_ids:
+        role.departments.clear()
+        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+        for dept in departments:
+            role.departments.add(dept)
+
     db.commit()
 
 
@@ -150,10 +169,13 @@ def delete_role(db, u, data_id):
     role = db.query(Role).options(joinedload(Role.menus)).get(data_id)
     if role is None:
         raise CustomException("该角色不存在")
-
-    role.menus.clear()
-    db.delete(role)
-    db.commit()
+    try:
+        role.departments.clear()
+        role.menus.clear()
+        db.delete(role)
+        db.commit()
+    except InterruptedError as e:
+        db.rollback()
 
 
 def get_menu_list(db, u, mode: int):
@@ -172,9 +194,9 @@ def get_menu_list(db, u, mode: int):
     datas = list(queryset.all())
     roots = filter(lambda i: not i.parent_id, datas)
     if mode == 1:
-        menus = generate_tree_list(datas, roots)
+        menus = generate_menu_tree_list(datas, roots)
     elif mode == 2:
-        menus = generate_tree_options(datas, roots)
+        menus = generate_menu_tree_options(datas, roots)
     else:
         raise CustomException("获取菜单失败，无可用选项")
     return Menu.menus_order(menus)
@@ -268,7 +290,103 @@ def generate_router_tree(menus: list[Menu], nodes: filter):
     return data
 
 
-def generate_tree_list(menus: list, nodes: filter) -> list:
+async def get_department_list(db, u, mode):
+    """
+    获取部门列表信息
+    :param db:
+    :param u:
+    :param mode:
+    :return:
+    """
+    if mode == 3:
+        sql = select(Department).where(Department.disabled == 0, Department.deleted_at.is_(None))
+    else:
+        sql = select(Department).where(Department.deleted_at.is_(None))
+
+    queryset = await db.scalars(sql)
+    datas = list(queryset.all())
+    roots = filter(lambda i: not i.parent_id, datas)
+    if mode == 1:
+        departments = generate_department_tree_list(datas, roots)
+    elif mode == 2 or mode == 3:
+        departments = generate_department_tree_options(datas, roots)
+    else:
+        raise CustomException("获取部门失败，无可用选项")
+    return Department.dept_order(departments)
+
+
+def create_department(db, u, form_data):
+    """
+    创建部门信息
+    :param form_data:
+    :param db:
+    :param u:
+    :return:
+    """
+    dp = Department(**form_data.model_dump())
+    db.add(dp)
+    db.commit()
+
+
+def put_department(db, u, data_id, form_data):
+    dp = db.query(Department).get(data_id)
+    if not dp:
+        raise CustomException("部门不存在，不能编辑")
+    obj_dict = jsonable_encoder(form_data)
+    for key, value in obj_dict.items():
+        setattr(dp, key, value)
+
+    db.flush(dp)
+
+
+def delete_department(db, ids, v_soft):
+    """
+    删除部门
+    :param db:
+    :param ids:
+    :param v_soft:
+    :return:
+    """
+    if v_soft:
+        db.query(Department).filter(Department.id.in_(ids)).update({"deleted_at": datetime.now()})
+    else:
+        db.query(Department).filter(Department.id.in_(ids)).delete()
+    db.commit()
+
+
+def generate_department_tree_list(departments: list[models.user.Department], nodes: filter) -> list:
+    """
+    生成部门树列表
+    :param departments: 总部门列表
+    :param nodes: 每层节点部门列表
+    :return:
+    """
+    data = []
+    for root in nodes:
+        router = system_schemas.DeptTreeListOut.model_validate(root)
+        sons = filter(lambda i: i.parent_id == root.id, departments)
+        router.children = generate_department_tree_list(departments, sons)
+        data.append(router.model_dump())
+    return data
+
+
+def generate_department_tree_options(departments: list[models.user.Department], nodes: filter) -> list:
+    """
+    生成部门树选择项
+    :param departments:
+    :param nodes: 每层节点部门列表
+    :return:
+    """
+    data = []
+    for root in nodes:
+        router = {"value": root.id, "label": root.name, "order": root.order}
+        sons = filter(lambda i: i.parent_id == root.id, departments)
+        router["children"] = generate_department_tree_options(departments, sons)
+        data.append(router)
+    return data
+
+
+def generate_menu_tree_list(menus: list, nodes: filter) -> list:
     """
     生成菜单树列表
     :param menus: 总菜单列表
@@ -279,12 +397,12 @@ def generate_tree_list(menus: list, nodes: filter) -> list:
     for root in nodes:
         router = system_schemas.MenuTreeResponse.from_orm(root)
         sons = filter(lambda i: i.parent_id == root.id, menus)
-        router.children = generate_tree_list(menus, sons)
+        router.children = generate_menu_tree_list(menus, sons)
         data.append(router.model_dump())
     return data
 
 
-def generate_tree_options(menus: list, nodes: filter):
+def generate_menu_tree_options(menus: list, nodes: filter):
     """
     生成菜单树选择项
     :param menus:总菜单列表
@@ -295,6 +413,6 @@ def generate_tree_options(menus: list, nodes: filter):
     for root in nodes:
         router = {"value": root.id, "label": root.title, "order": root.order}
         sons = filter(lambda i: i.parent_id == root.id, menus)
-        router["children"] = generate_tree_options(menus, sons)
+        router["children"] = generate_menu_tree_options(menus, sons)
         data.append(router)
     return data

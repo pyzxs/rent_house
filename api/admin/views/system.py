@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 from api.admin.logics import system
 from api.admin.params.system import UserParams, RoleParams
 from api.admin.schemas import system_schemas
-from core.database import get_db
+from core.database import get_db, get_async_db
+from core.dependencies import IdList
 from core.exception import CustomException
 from core.response import SuccessResponse, ErrorResponse
 from models.data_dict import DictType
@@ -19,6 +20,9 @@ from services import auth, dict as dictService
 systemAPI = APIRouter()
 
 
+###########################################################
+#    user manage
+###########################################################
 @systemAPI.post("/user", summary="创建用户")
 def create_user(form_data: system_schemas.UserRequest,
                 db: Session = Depends(get_db),
@@ -56,6 +60,10 @@ def put_user(data_id: int,
              ):
     return SuccessResponse(system.put_user(db, u, data_id, form_data), "编辑用户完成")
 
+
+###########################################################
+#    role manage
+###########################################################
 
 @systemAPI.get("/role", summary="获取角色列表")
 def get_role_list(params: RoleParams = Depends(),
@@ -98,6 +106,9 @@ def put_role(
     return SuccessResponse(system.put_role(db, u, data_id, form_data), '更新角色完成')
 
 
+###########################################################
+#    menu manage
+###########################################################
 @systemAPI.get("/menu", summary="获取菜单列表")
 def get_menu_list(
         mode: int = Query(default=1, description="菜单模式 1、菜单列表使用 2、添加角色使用"),
@@ -131,6 +142,42 @@ def put_menu(
         u=Depends(auth.get_current_user)
 ):
     return SuccessResponse(system.put_menu(db, u, data_id, form_data), "编辑菜单完成")
+
+
+###########################################################
+#    department manage
+###########################################################
+@systemAPI.get("/department", summary="获取部门列表")
+async def get_department_lit(
+        mode: int = Query(default=1, description="部门 1、列表使用 2、添加/修改部门使用 3、部门权限时使用"),
+        db: Session = Depends(get_async_db),
+        u=Depends(auth.get_current_user)
+):
+    return SuccessResponse(await system.get_department_list(db, u, mode))
+
+
+@systemAPI.post("/department", summary="创建部门信息")
+def create_department(form_data: system_schemas.Department,
+                      db: Session = Depends(get_db),
+                      u=Depends(auth.get_current_user)
+                      ):
+    return SuccessResponse(system.create_department(db, u, form_data))
+
+
+@systemAPI.delete("/department", summary="批量删除部门", description="硬删除, 如果存在用户关联则无法删除")
+def delete_department(ids: IdList = Depends(),
+                      db: Session = Depends(get_db),
+                      u=Depends(auth.get_current_user)):
+    return SuccessResponse(system.delete_department(db, ids.ids, v_soft=False), "删除成功")
+
+
+@systemAPI.put("/department/{data_id}", summary="更新部门信息")
+def put_department(
+        data_id: int,
+        data: system_schemas.Department,
+        db: Session = Depends(get_db),
+        u=Depends(auth.get_current_user)):
+    return SuccessResponse(system.put_department(db, u, data_id, data))
 
 
 @systemAPI.get("/dict/list", summary="获取数据字典列表")
@@ -179,7 +226,7 @@ def create_dict_detail(
         db: Session = Depends(get_db),
         u=Depends(auth.get_current_user)
 ):
-    return SuccessResponse(dictService.create_dict_detail(db, u, dict_id,form_data), '创建字典详情')
+    return SuccessResponse(dictService.create_dict_detail(db, u, dict_id, form_data), '创建字典详情')
 
 
 @systemAPI.put("/dict/detail/{detail_id}", summary="编辑字典详情")
@@ -190,6 +237,7 @@ def update_dict_detail(
         u=Depends(auth.get_current_user)
 ):
     return SuccessResponse(dictService.update_dict_detail(db, u, detail_id, form_data), '编辑字典详情完成')
+
 
 @systemAPI.delete("/dict/detail/{detail_id}", summary="删除字典详情")
 def delete_dict_detail(

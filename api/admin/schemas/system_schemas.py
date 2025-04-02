@@ -4,17 +4,16 @@
 # @Create Time    : 2025/2/12
 # @File           : request_schemas.py
 # @desc           : 请求数据
-from typing import Union, List, Optional
+from typing import Union, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
-from core.datatype import Telephone
+from core.datatype import Telephone, DatetimeStr
 
 
 class User(BaseModel):
     telephone: Telephone = Field(..., description="手机号码")
     name: str = Field(default='', min_length=2, max_length=50)
-    avatar: Union[str, None] = Field(default=None, description="用户头像")
     nickname: Union[str, None] = Field(default='', min_length=2, max_length=50)
     disabled: bool = Field(default=False, description="是否禁止")
     gender: Union[str, None] = Field(default='0', description="性别")
@@ -23,6 +22,7 @@ class User(BaseModel):
 
 class UserRequest(User):
     role_ids: list[int] = []
+    dept_ids: list[int] = []
     password: Union[str, None] = Field(default=None)
 
 
@@ -87,19 +87,47 @@ class Role(BaseModel):
 
 class RoleRequest(Role):
     menu_ids: Union[list[int], None] = []
+    dept_ids: list[int] = []
+
+
+class Department(BaseModel):
+    name: str
+    dept_key: str
+    disabled: bool = False
+    order: int | None = None
+    desc: str | None = None
+    owner: str | None = None
+    phone: str | None = None
+    email: str | None = None
+
+    parent_id: int | None = None
+
+
+class DeptSimpleOut(Department):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    create_datetime: DatetimeStr
+    update_datetime: DatetimeStr
+
+
+class DeptTreeListOut(DeptSimpleOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    children: list[dict] = []
 
 
 class DictTypeRequest(BaseModel):
-    name: str
-    tp: str
-    disabled: bool
-    remark: str
+    name: str = Field(..., description="字典类型名称")
+    tp: str = Field(description="字典类型")
+    disabled: bool = Field(default=False, description="是否禁止")
+    remark: str = Field(description="备注信息")
 
 
 class DictDetailRequest(BaseModel):
-    label: str
-    value: str
-    disabled: bool
-    is_default: bool
-    order: int = None
-    remark: str = None
+    label: str = Field(description="标签名称")
+    value: str = Field(description="标签值")
+    disabled: bool = Field(default=False, description="是否禁用")
+    is_default: bool = Field(default=False, description="是否默认")
+    order: int = Field(default=0, description="排序")
+    remark: str = Field(default='', description="备注信息")

@@ -3,13 +3,13 @@
 # @version : 1.0
 # @File    ：main.py
 # @Author  ：ben
-# @Date    ：2025/4/2 下午1:36 
-# @desc    : main
+# @Date    ：2025/4/2 13:36 
+# @desc    : main entry point
 
 """
-FastApi 更新文档：https://github.com/tiangolo/fastapi/releases
-FastApi Github：https://github.com/tiangolo/fastapi
-Typer 官方文档：https://typer.tiangolo.com/
+FastApi releases: https://github.com/tiangolo/fastapi/releases
+FastApi Github: https://github.com/tiangolo/fastapi
+Typer documentation: https://typer.tiangolo.com/
 """
 
 import typer
@@ -31,7 +31,7 @@ shell_app = typer.Typer()
 
 
 def create_app():
-    """启动项目"""
+    """Initialize and start the project"""
     app = FastAPI(
         title="rent_house",
         description="rent house project",
@@ -43,20 +43,20 @@ def create_app():
     @app.get("/docs", include_in_schema=False)
     async def custom_swagger_ui():
         return get_swagger_ui_html(
-            openapi_url="/openapi.json",  # 指定 OpenAPI 文档路径
-            title="rent house",  # 自定义页面标题
-            swagger_js_url="/media/swagger-ui/swagger-ui-bundle.js",  # 本地 JS 文件
-            swagger_css_url="/media/swagger-ui/swagger-ui.css",  # 本地 CSS 文件
-            swagger_favicon_url="/media/swagger-ui/favicon.png"  # 本地 favicon 图标
+            openapi_url="/openapi.json",  # OpenAPI document path
+            title="rent house",  # Custom page title
+            swagger_js_url="/media/swagger-ui/swagger-ui-bundle.js",  # Local JS file
+            swagger_css_url="/media/swagger-ui/swagger-ui.css",  # Local CSS file
+            swagger_favicon_url="/media/swagger-ui/favicon.png"  # Local favicon
         )
 
     Base.metadata.create_all(bind=engine)
     import_modules(settings.MIDDLEWARES, "middleware", app=app)
 
-    # 全局异常捕捉处理
+    # Global exception handling
     register_exception(app)
 
-    # 路由
+    # Routers
     if settings.STATIC_ENABLE:
         app.mount(settings.STATIC_URL, app=StaticFiles(directory=settings.STATIC_ROOT))
 
@@ -65,17 +65,16 @@ def create_app():
 
     return app
 
-
 @shell_app.command()
 def run(
-        host: str = typer.Option(default='0.0.0.0', help='监听主机IP，默认开放给本网络所有主机'),
-        port: int = typer.Option(default=8088, help='监听端口')
+        host: str = typer.Option(default='0.0.0.0', help='Host IP to listen on, defaults to all hosts on the network'),
+        port: int = typer.Option(default=8000, help='Port to listen on')
 ):
     """
-    启动项目
-
-    factory: 在使用 uvicorn.run() 启动 ASGI 应用程序时，可以通过设置 factory 参数来指定应用程序工厂。
-    应用程序工厂是一个返回 ASGI 应用程序实例的可调用对象，它可以在启动时动态创建应用程序实例。
+    Start the project
+    
+    factory: When using uvicorn.run() to start an ASGI application, the factory parameter can be used to specify an application factory.
+    An application factory is a callable that returns an ASGI application instance, allowing dynamic creation of the application instance at startup.
     """
     if settings.DEBUG:
         uvicorn.run(app='main:create_app', host=host, port=port, reload=True, factory=True)
@@ -86,42 +85,38 @@ def run(
 @shell_app.command()
 def queue():
     """
-    启动服务脚本
-
+    Start service script
+    
     celery --app schedule worker -l info -c 4  -E -P eventlet
     """
     scheduler.queue()
 
-
 @shell_app.command()
 def crontab():
     """
-    启动服务脚本
-
+    Start service script
+    
     celery --app schedule beat -l info
     """
     scheduler.crontab()
 
-
 @shell_app.command()
 def migrate():
     """
-    生成角色、管理员、菜单信息
-
+    Generate roles, admin, and menu information
     """
     print("initialize database")
     if settings.DEBUG:
         initialize.migrate()
     else:
-        print("online can not migrate")
-
+        print("Migration not allowed in production environment")
 
 if __name__ == '__main__':
     try:
         shell_app()
     except KeyboardInterrupt:
-        print("检测到中断信号，正在优雅地关闭程序...")
+        print("Interrupt signal detected, shutting down gracefully...")
     except Exception as e:
-        print(f"发生了一个错误: {e}")
+        print(f"An error occurred: {e}")
     finally:
-        print("执行清理工作...")
+        print("Performing cleanup...")

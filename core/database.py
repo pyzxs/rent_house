@@ -95,7 +95,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         return table_name
 
 
-async def get_sync_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     获取主数据库会话
 

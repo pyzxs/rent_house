@@ -14,22 +14,28 @@ db = database.session_local()
 
 
 def migrate():
+    print("create system menus")
+    create_system_menus()
+    print("create system departments")
+    create_system_department()
     print("create system roles")
     create_super_role()
     print("create super user")
     create_super_admin()
-    print("create system menus")
-    create_system_menus()
 
-
+def create_system_department():
+    department = {"name": "Headquarters", "dept_key":"head", "disabled": False, "order": 0, "desc": "Headquarters department"}
+    form_data = system_schemas.Department(**department)
+    system.create_department(db, None, form_data)
+    
 def create_super_role():
-    role = {"role_key": "admin", "name": "super admin", "disabled": False, "order": 0,"is_admin":1, "desc": "super admin role"}
+    role = {"role_key": "admin", "name": "super admin", "disabled": False, "order": 0,"is_admin":1, "desc": "super admin role","menu_ids":[1,2,3,4], "dept_ids":[1]}
     form_data = system_schemas.RoleRequest(**role)
     system.create_role(db, None, form_data)
 
 
 def create_super_admin():
-    user = {"telephone": '13800000000', 'name': 'super admin', 'nickname': "super admin", 'is_staff': True,'role_ids': [1]}
+    user = {"telephone": '13800000000', 'name': 'super admin', 'nickname': "super admin", 'is_staff': True,'role_ids': [1], 'dept_ids': [1]}
     form_data = system_schemas.UserRequest(**user)
     system.create_user(db, form_data)
 

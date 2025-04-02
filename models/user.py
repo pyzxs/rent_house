@@ -32,6 +32,20 @@ role_menus = Table(
     comment="role has many menus"
 )
 
+user_departments = Table(
+    "user_departments",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE")),
+    Column("dept_id", Integer, ForeignKey("departments.id", ondelete="CASCADE")),
+)
+
+role_departments = Table(
+    "role_departments",
+    Base.metadata,
+    Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE")),
+    Column("dept_id", Integer, ForeignKey("departments.id", ondelete="CASCADE")),
+)
+
 
 class Menu(BaseModel):
     __tablename__ = "menus"
@@ -89,11 +103,13 @@ class Role(BaseModel):
     role_key: Mapped[str] = mapped_column(String(50), index=True, comment="角色key")
     name: Mapped[str] = mapped_column(String(50), index=True, comment="名称")
     disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否禁用")
+    data_range: Mapped[int] = mapped_column(Integer, default=4, comment="数据权限范围")
     order: Mapped[int or None] = mapped_column(Integer, default=0, comment="排序")
     desc: Mapped[str or None] = mapped_column(String(255), nullable=True, comment="描述")
     is_admin: Mapped[bool] = mapped_column(Boolean, comment="是否为超级角色", default=False)
 
     menus: Mapped[set[Menu]] = relationship(secondary=role_menus)
+    departments: Mapped[set["Department"]] = relationship(secondary=role_departments)
 
 
 class User(BaseModel):
@@ -110,6 +126,8 @@ class User(BaseModel):
     last_login_at: Mapped[datetime or None] = mapped_column(DateTime, nullable=True, comment="最近一次登录时间")
 
     roles: Mapped[set[Role]] = relationship(secondary=user_roles)
+    departments: Mapped[set["Department"]] = relationship(secondary=user_departments)
+
     @staticmethod
     def get_password_hash(password: str) -> str:
         """
@@ -137,3 +155,38 @@ class User(BaseModel):
         :return:
         """
         return any([i.is_admin for i in self.roles])
+
+
+class Department(BaseModel):
+    __tablename__ = "departments"
+    __table_args__ = ({'comment': 'department table'})
+
+    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="部门名称")
+    dept_key: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="部门标识")
+    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否禁用")
+    order: Mapped[int | None] = mapped_column(Integer, comment="显示排序")
+    desc: Mapped[str | None] = mapped_column(String(255), comment="描述")
+    owner: Mapped[str | None] = mapped_column(String(255), comment="负责人")
+    phone: Mapped[str | None] = mapped_column(String(255), comment="联系电话")
+    email: Mapped[str | None] = mapped_column(String(255), comment="邮箱")
+
+    parent_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("departments.id", ondelete='CASCADE'),
+        comment="上级部门"
+    )
+
+    @classmethod
+    def dept_order(cls, datas: list, order: str = "order", children: str = "children") -> list:
+        """
+        部门排序
+        :param datas:
+        :param order:
+        :param children:
+        :return:
+        """
+        result = sorted(datas, key=lambda dept: dept[order])
+        for item in result:
+            if item[children]:
+                item[children] = sorted(item[children], key=lambda dept: dept[order])
+        return result
