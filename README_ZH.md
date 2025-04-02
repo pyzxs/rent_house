@@ -1,5 +1,8 @@
 ## 房屋出租项目
 
+房屋出租项目
+[English](README.md) | [中文](README_ZH.md)
+
 ### 一、项目安装
 ```shell
 pip install -r requirement.txt
