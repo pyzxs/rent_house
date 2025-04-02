@@ -10,6 +10,8 @@ from config import settings
 from redis import asyncio as aioredis
 from redis.exceptions import AuthenticationError, TimeoutError, RedisError
 from contextlib import asynccontextmanager
+
+from core.log import logger
 from core.module import import_modules_async
 
 
@@ -64,9 +66,9 @@ async def connect_redis(app: FastAPI, status: bool):
         try:
             response = await rd.ping()
             if response:
-                print("Redis 连接成功")
+                logger.info("Redis connect success!")
             else:
-                print("Redis 连接失败")
+                logger.info("Redis connect failed")
         except AuthenticationError as e:
             raise AuthenticationError(f"Redis 连接认证失败，用户名或密码错误: {e}")
         except TimeoutError as e:
@@ -74,6 +76,6 @@ async def connect_redis(app: FastAPI, status: bool):
         except RedisError as e:
             raise RedisError(f"Redis 连接失败: {e}")
     else:
-        print("Redis 连接关闭")
+        logger.info("Redis connect closed")
         await app.state.redis.close()
 

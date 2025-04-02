@@ -127,7 +127,7 @@ def create_role(db, u, form_data):
     if exists:
         raise CustomException(f"Role {form_data.role_key} already exists")
 
-    role = Role(**form_data.model_dump(exclude={'menu_ids','dept_ids'}))
+    role = Role(**form_data.model_dump(exclude={'menu_ids', 'dept_ids'}))
     if form_data.menu_ids:
         role.menus.clear()
         menus = db.query(Menu).filter(Menu.id.in_(form_data.menu_ids)).all()
@@ -183,7 +183,6 @@ def delete_role(db, u, data_id):
     db.commit()
 
 
-
 def get_menu_list(db, u, mode: int):
     """
     1: Get menu tree list
@@ -208,48 +207,6 @@ def get_menu_list(db, u, mode: int):
     return Menu.menus_order(menus)
 
 
-def create_menu(db, u, form_data):
-    if form_data.parent_id == 0:
-        form_data.parent_id = None
-    exists = db.query(Menu).filter(Menu.path == form_data.path).count()
-    if exists:
-        raise CustomException("Route path cannot be duplicated")
-
-    menu = Menu(**form_data.model_dump())
-    db.add(menu)
-    db.commit()
-
-
-def delete_menu(db, u, data_id):
-    menu = db.query(Menu).get(data_id)
-    if not menu:
-        raise CustomException("Menu does not exist")
-    exists = db.query(Menu).filter(Menu.parent_id == menu.id).count()
-    if exists:
-        raise CustomException("Cannot delete menu with submenus")
-    db.delete(menu)
-    db.commit()
-
-
-def put_menu(db, u, data_id, form_data):
-    menu = db.query(Menu).filter_by(id=data_id).first()
-    if not menu:
-        raise CustomException("Menu does not exist")
-
-    exists = db.query(Menu).filter(Menu.path == form_data.path, Menu.id != data_id).count()
-    if exists:
-        raise CustomException("Route path cannot be duplicated")
-
-    if form_data.parent_id == 0:
-        form_data.parent_id = None
-
-    data = form_data.model_dump()
-    for key, value in data.items():
-        if key in Menu.get_column_attrs():
-            setattr(menu, key, value)
-    db.commit()
-
-
 def get_user_menu_tree(db, user: User):
     """
     Get user menu tree
@@ -267,38 +224,12 @@ def get_user_menu_tree(db, user: User):
         datas = set()
         for role in user.roles:
             for menu in role.menus:
-                # 非禁用并显示的所有惨淡
+                # Non-disabled and visible menus
                 if not menu.disabled:
                     datas.add(menu)
     roots = filter(lambda i: not i.parent_id, datas)
     menus = generate_router_tree(datas, roots)
     return Menu.menus_order(menus, 'index')
-
-
-def generate_router_tree(menus: list[Menu], nodes: filter):
-    """
-    Generate router tree
-    :param menus: all menu list
-    :param nodes: node menu list
-    :return: router tree
-    """
-    data = []
-    for root in nodes:
-        router = system_schemas.RouterOut.model_validate(root)
-        router.name = root.name
-        router.index = root.order
-        router.meta = system_schemas.Meta(
-            title=root.title,
-            icon=root.icon,
-            hideInMenu=root.hidden,
-            affixTab=root.affix,
-            order=root.order,
-            keepAlive=root.no_cache
-        )
-        sons = filter(lambda i: i.parent_id == root.id, menus)
-        router.children = generate_router_tree(menus, sons)
-        data.append(router.model_dump())
-    return data
 
 
 async def get_department_list(db, u, mode):
@@ -394,6 +325,33 @@ def generate_department_tree_options(departments: list[models.user.Department], 
         sons = filter(lambda i: i.parent_id == root.id, departments)
         router["children"] = generate_department_tree_options(departments, sons)
         data.append(router)
+    return data
+
+
+def generate_router_tree(menus: list[Menu], nodes: filter):
+    """
+    generate router tr
+    :param menus: menus list
+    :param nodes: node menu list
+    :return:
+    """
+
+    data = []
+    for root in nodes:
+        router = system_schemas.RouterOut.model_validate(root)
+        router.name = root.name
+        router.index = root.order
+        router.meta = system_schemas.Meta(
+            title=root.title,
+            icon=root.icon,
+            hideInMenu=root.hidden,
+            affixTab=root.affix,
+            order=root.order,
+            keepAlive=root.no_cache
+        )
+        sons = filter(lambda i: i.parent_id == root.id, menus)
+        router.children = generate_router_tree(menus, sons)
+        data.append(router.model_dump())
     return data
 
 

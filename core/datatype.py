@@ -3,7 +3,7 @@
 # @version        : 1.0
 # @Create Time    : 2025/2/12
 # @File           : datatype.py
-# @desc           : data typeAnnotated
+# @desc           : 主配置文件
 
 
 from typing import Annotated

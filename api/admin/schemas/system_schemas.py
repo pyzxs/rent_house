@@ -3,7 +3,7 @@
 # @version        : 1.0
 # @Create Time    : 2025/2/12
 # @File           : request_schemas.py
-# @desc           : 请求数据
+# @desc           : Request data schemas
 from typing import Union, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -12,12 +12,12 @@ from core.datatype import Telephone, DatetimeStr
 
 
 class User(BaseModel):
-    telephone: Telephone = Field(..., description="手机号码")
+    telephone: Telephone = Field(..., description="Phone number")
     name: str = Field(default='', min_length=2, max_length=50)
     nickname: Union[str, None] = Field(default='', min_length=2, max_length=50)
-    disabled: bool = Field(default=False, description="是否禁止")
-    gender: Union[str, None] = Field(default='0', description="性别")
-    is_staff: bool = Field(default=False, description="是否是员工")
+    disabled: bool = Field(default=False, description="Whether disabled")
+    gender: Union[str, None] = Field(default='0', description="Gender")
+    is_staff: bool = Field(default=False, description="Whether staff")
 
 
 class UserRequest(User):
@@ -28,25 +28,24 @@ class UserRequest(User):
 
 class UserResponse(User):
     model_config = ConfigDict(from_attributes=True)
-
-    id: int = Field(..., description="用户ID")
+    id: int = Field(..., description="User ID")
 
 
 class Menu(BaseModel):
-    title: str = Field(..., description="菜单标题")
-    name: str = Field(..., description="菜单名称")
-    icon: Union[str, None] = Field(default='', description="菜单图标")
-    redirect: Union[str, None] = Field(None, description="重定向地址")
-    component: Union[str, None] = Field(description="前端组件地址")
-    path: Union[str, None] = Field(description="前端路由地址")
-    disabled: bool = Field(default=False, description="是否禁用")
-    hidden: bool = Field(default=False, description="是否隐藏")
-    order: int = Field(default=0, description="排序")
-    menu_type: int = Field(default=0, description="菜单类型： 0、目录 1、菜单 2、按钮")
-    perms: Optional[str] = Field(None, description="权限标识")
-    parent_id: Union[int, None] = Field(default=0, description="父级ID")
-    no_cache: Union[bool, None] = Field(default=False, description="是否缓存")
-    affix: Union[bool, None] = Field(default=False, description="禁锢导航栏")
+    title: str = Field(..., description="Menu title")
+    name: str = Field(..., description="Menu name")
+    icon: Union[str, None] = Field(default='', description="Menu icon")
+    redirect: Union[str, None] = Field(None, description="Redirect address")
+    component: Union[str, None] = Field(description="Frontend component path")
+    path: Union[str, None] = Field(description="Frontend route path")
+    disabled: bool = Field(default=False, description="Whether disabled")
+    hidden: bool = Field(default=False, description="Whether hidden")
+    order: int = Field(default=0, description="Sort order")
+    menu_type: int = Field(default=0, description="Menu type: 0=directory, 1=menu, 2=button")
+    perms: Optional[str] = Field(None, description="Permission identifier")
+    parent_id: Union[int, None] = Field(default=0, description="Parent ID")
+    no_cache: Union[bool, None] = Field(default=False, description="Whether to cache")
+    affix: Union[bool, None] = Field(default=False, description="Pin to navigation bar")
 
 
 class Meta(BaseModel):
@@ -60,7 +59,7 @@ class Meta(BaseModel):
 
 class RouterOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: int = Field(..., description="菜单Id")
+    id: int = Field(..., description="Menu ID")
     name: Union[str, None] = None
     component: Union[str, None] = None
     path: str
@@ -72,17 +71,17 @@ class RouterOut(BaseModel):
 
 class MenuTreeResponse(Menu):
     model_config = ConfigDict(from_attributes=True)
-    id: int = Field(..., description="菜单Id")
+    id: int = Field(..., description="Menu ID")
     children: Union[list[dict], None] = None
 
 
 class Role(BaseModel):
-    role_key: str = Field(..., description="角色key")
-    name: str = Field(..., description="角色名称")
-    data_range: int = Field(default=0, description="角色数据权限，预留")
-    disabled: bool = Field(default=False, description="是否禁止")
-    order: int = Field(default=0, description="排序")
-    desc: str = Field(description="描述")
+    role_key: str = Field(..., description="Role key")
+    name: str = Field(..., description="Role name")
+    data_range: int = Field(default=0, description="Role data scope (reserved)")
+    disabled: bool = Field(default=False, description="Whether disabled")
+    order: int = Field(default=0, description="Sort order")
+    desc: str = Field(description="Description")
 
 
 class RoleRequest(Role):
@@ -99,13 +98,11 @@ class Department(BaseModel):
     owner: str | None = None
     phone: str | None = None
     email: str | None = None
-
     parent_id: int | None = None
 
 
 class DeptSimpleOut(Department):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     create_datetime: DatetimeStr
     update_datetime: DatetimeStr
@@ -113,21 +110,20 @@ class DeptSimpleOut(Department):
 
 class DeptTreeListOut(DeptSimpleOut):
     model_config = ConfigDict(from_attributes=True)
-
     children: list[dict] = []
 
 
 class DictTypeRequest(BaseModel):
-    name: str = Field(..., description="字典类型名称")
-    tp: str = Field(description="字典类型")
-    disabled: bool = Field(default=False, description="是否禁止")
-    remark: str = Field(description="备注信息")
+    name: str = Field(..., description="Dictionary type name")
+    tp: str = Field(description="Dictionary type")
+    disabled: bool = Field(default=False, description="Whether disabled")
+    remark: str = Field(description="Remark")
 
 
 class DictDetailRequest(BaseModel):
-    label: str = Field(description="标签名称")
-    value: str = Field(description="标签值")
-    disabled: bool = Field(default=False, description="是否禁用")
-    is_default: bool = Field(default=False, description="是否默认")
-    order: int = Field(default=0, description="排序")
-    remark: str = Field(default='', description="备注信息")
+    label: str = Field(description="Label name")
+    value: str = Field(description="Label value")
+    disabled: bool = Field(default=False, description="Whether disabled")
+    is_default: bool = Field(default=False, description="Whether default")
+    order: int = Field(default=0, description="Sort order")
+    remark: str = Field(default='', description="Remark")

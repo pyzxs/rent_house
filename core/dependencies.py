@@ -43,7 +43,7 @@ class QueryParams:
 
 class Paging(QueryParams):
     """
-    list pagination
+    列表分页
     """
 
     def __init__(self, page: int = 1, limit: int = 10, v_order_field: str = None, v_order: str = None):
@@ -57,7 +57,7 @@ class Paging(QueryParams):
 
 class IdList:
     """
-    id list
+    id 列表
     """
 
     def __init__(self, ids: list[int] = Body(..., title="ID 列表")):

@@ -7,8 +7,12 @@
 # @desc    : route urls
 
 from api.admin import *
+from api.index import *
 
 urlpatterns = [
     # admin system route
     {"ApiRouter": adminSystemAPI, "prefix": "/api/admin/system", "tags": ["Admin-System Manage"]},
+
+    # index module route
+    {"ApiRouter": indexAPI, "prefix": "/api", "tags": ["Admin-Index Manage"]},
 ]

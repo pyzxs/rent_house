@@ -118,6 +118,9 @@ class User(BaseModel):
     last_ip: Mapped[str or None] = mapped_column(String(50), nullable=True, comment="Last login IP")
     last_login_at: Mapped[datetime or None] = mapped_column(DateTime, nullable=True, comment="Last login time")
 
+    roles: Mapped[set[Role]] = relationship(secondary=user_roles)
+    departments: Mapped[set["Department"]] = relationship(secondary=user_departments)
+
     @staticmethod
     def get_password_hash(password: str) -> str:
         """
