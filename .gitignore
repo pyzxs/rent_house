@@ -6,3 +6,6 @@
 /temp
 *.tmp
 *.temp
+__pycache__/
+*.py[cod]
+$__pycache__$

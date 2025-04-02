@@ -3,7 +3,7 @@
 # @version        : 1.0
 # @Create Time    : 2025/2/12
 # @File           : user.py
-# @desc           : 主配置文件
+# @desc           : Main configuration file
 from datetime import datetime
 from typing import Union, Optional
 
@@ -21,7 +21,7 @@ user_roles = Table(
     Base.metadata,
     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE")),
     Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE")),
-    comment="user has many roles"
+    comment="User can have multiple roles"
 )
 
 role_menus = Table(
@@ -49,46 +49,39 @@ role_departments = Table(
 
 class Menu(BaseModel):
     __tablename__ = "menus"
-    __table_args__ = ({'comment': 'menus table'})
+    __table_args__ = ({'comment': 'Menus table'})
 
-    title: Mapped[str] = mapped_column(String(50), comment="菜单标题")
-    name: Mapped[str] = mapped_column(String(50), comment="菜单名称")
-    icon: Mapped[Union[str, None]] = mapped_column(String(50), comment="菜单图标")
-    redirect: Mapped[Union[str, None]] = mapped_column(String(100), comment="重定向地址")
-    component: Mapped[Union[str, None]] = mapped_column(String(255), comment="前端组件地址")
-    path: Mapped[Union[str, None]] = mapped_column(String(50), comment="前端路由地址")
-    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否禁用")
-    hidden: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否隐藏")
-    menu_type: Mapped[int] = mapped_column(Integer, default=0, comment="菜单类型：0、目录 1、菜单 2、按钮")
-    perms: Mapped[Optional[str]] = mapped_column(String(50), comment="权限标识", unique=False, index=True)
-    order: Mapped[int] = mapped_column(Integer, comment="排序")
+    title: Mapped[str] = mapped_column(String(50), comment="Menu title")
+    name: Mapped[str] = mapped_column(String(50), comment="Menu name")
+    icon: Mapped[Union[str, None]] = mapped_column(String(50), comment="Menu icon")
+    redirect: Mapped[Union[str, None]] = mapped_column(String(100), comment="Redirect address")
+    component: Mapped[Union[str, None]] = mapped_column(String(255), comment="Frontend component path")
+    path: Mapped[Union[str, None]] = mapped_column(String(50), comment="Frontend route path")
+    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether disabled")
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether hidden")
+    menu_type: Mapped[int] = mapped_column(Integer, default=0, comment="Menu type: 0=directory, 1=menu, 2=button")
+    perms: Mapped[Optional[str]] = mapped_column(String(50), comment="Permission identifier", unique=False, index=True)
+    order: Mapped[int] = mapped_column(Integer, comment="Sort order")
 
-    """以下属性主要用于补全前端路由属性，"""
     no_cache: Mapped[bool] = mapped_column(
         Boolean,
-        comment="如果设置为true，则不会被 <keep-alive> 缓存(默认 false)",
+        comment="If set to true, will not be cached by <keep-alive> (default false)",
         default=False
     )
     affix: Mapped[bool] = mapped_column(
         Boolean,
-        comment="如果设置为true，则会一直固定在tag项中(默认 false)",
+        comment="If set to true, will be fixed in tag items (default false)",
         default=False
-    )
-    parent_id: Mapped[Union[int, None]] = mapped_column(
-        Integer,
-        ForeignKey("menus.id"),
-        nullable=True,
-        comment="parent menu id"
     )
 
     @staticmethod
     def menus_order(datas: list, order: str = "order", children: str = "children") -> list:
         """
-        菜单排序
-        :param datas:
-        :param order:
-        :param children:
-        :return:
+        Sort menus
+        :param datas: menu data
+        :param order: sort field
+        :param children: children field
+        :return: sorted menu list
         """
         result = sorted(datas, key=lambda menu: menu[order])
         for item in result:
@@ -99,14 +92,14 @@ class Menu(BaseModel):
 
 class Role(BaseModel):
     __tablename__ = "roles"
-    __table_args__ = ({'comment': '角色表'})
-    role_key: Mapped[str] = mapped_column(String(50), index=True, comment="角色key")
-    name: Mapped[str] = mapped_column(String(50), index=True, comment="名称")
-    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否禁用")
-    data_range: Mapped[int] = mapped_column(Integer, default=4, comment="数据权限范围")
-    order: Mapped[int or None] = mapped_column(Integer, default=0, comment="排序")
-    desc: Mapped[str or None] = mapped_column(String(255), nullable=True, comment="描述")
-    is_admin: Mapped[bool] = mapped_column(Boolean, comment="是否为超级角色", default=False)
+    __table_args__ = ({'comment': 'Roles table'})
+    role_key: Mapped[str] = mapped_column(String(50), index=True, comment="Role key")
+    name: Mapped[str] = mapped_column(String(50), index=True, comment="Name")
+    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether disabled")
+    data_range: Mapped[int] = mapped_column(Integer, default=4, comment="Data permission scope")
+    order: Mapped[int or None] = mapped_column(Integer, default=0, comment="Sort order")
+    desc: Mapped[str or None] = mapped_column(String(255), nullable=True, comment="Description")
+    is_admin: Mapped[bool] = mapped_column(Boolean, comment="Whether super role", default=False)
 
     menus: Mapped[set[Menu]] = relationship(secondary=role_menus)
     departments: Mapped[set["Department"]] = relationship(secondary=role_departments)
@@ -114,76 +107,64 @@ class Role(BaseModel):
 
 class User(BaseModel):
     __tablename__ = 'users'
-    __table_args__ = ({'comment': '用户表'})
-    telephone: Mapped[str] = mapped_column(String(11), index=True, unique=True, comment="手机号码")
-    password: Mapped[str] = mapped_column(String(128), comment="密码")
-    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="姓名")
-    nickname: Mapped[str or None] = mapped_column(String(50), nullable=True, comment="昵称")
-    gender: Mapped[str or None] = mapped_column(String(8), nullable=True, comment="性别")
-    disabled: Mapped[bool] = mapped_column(Boolean, default=True, comment="是否禁用")
-    is_staff: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否为工作人员")
-    last_ip: Mapped[str or None] = mapped_column(String(50), nullable=True, comment="最后一次登录IP")
-    last_login_at: Mapped[datetime or None] = mapped_column(DateTime, nullable=True, comment="最近一次登录时间")
-
-    roles: Mapped[set[Role]] = relationship(secondary=user_roles)
-    departments: Mapped[set["Department"]] = relationship(secondary=user_departments)
+    __table_args__ = ({'comment': 'Users table'})
+    telephone: Mapped[str] = mapped_column(String(11), index=True, unique=True, comment="Phone number")
+    password: Mapped[str] = mapped_column(String(128), comment="Password")
+    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="Full name")
+    nickname: Mapped[str or None] = mapped_column(String(50), nullable=True, comment="Nickname")
+    gender: Mapped[str or None] = mapped_column(String(8), nullable=True, comment="Gender")
+    disabled: Mapped[bool] = mapped_column(Boolean, default=True, comment="Whether disabled")
+    is_staff: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether staff member")
+    last_ip: Mapped[str or None] = mapped_column(String(50), nullable=True, comment="Last login IP")
+    last_login_at: Mapped[datetime or None] = mapped_column(DateTime, nullable=True, comment="Last login time")
 
     @staticmethod
     def get_password_hash(password: str) -> str:
         """
-        生成哈希密码
-        :param password: 原始密码
-        :return: 哈希密码
+        Generate hashed password
+        :param password: plain password
+        :return: hashed password
         """
-        return pwd_context.hash(password)
 
     @staticmethod
     def verify_password(password: str, hashed_password: str) -> bool:
         """
-        验证原始密码是否与哈希密码一致
-        :param password: 原始密码
-        :param hashed_password: 哈希密码
-        :return:
+        Verify if plain password matches hashed password
+        :param password: plain password
+        :param hashed_password: hashed password
+        :return: verification result
         """
-        return pwd_context.verify(password, hashed_password)
 
     @property
     def is_admin(self) -> bool:
         """
-        获取该用户是否拥有最高权限
-        以最高权限为准
-        :return:
+        Check if user has super privileges
+        :return: whether user has super privileges
         """
         return any([i.is_admin for i in self.roles])
 
 
 class Department(BaseModel):
     __tablename__ = "departments"
-    __table_args__ = ({'comment': 'department table'})
+    __table_args__ = ({'comment': 'Departments table'})
 
-    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="部门名称")
-    dept_key: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="部门标识")
-    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否禁用")
-    order: Mapped[int | None] = mapped_column(Integer, comment="显示排序")
-    desc: Mapped[str | None] = mapped_column(String(255), comment="描述")
-    owner: Mapped[str | None] = mapped_column(String(255), comment="负责人")
-    phone: Mapped[str | None] = mapped_column(String(255), comment="联系电话")
-    email: Mapped[str | None] = mapped_column(String(255), comment="邮箱")
-
-    parent_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("departments.id", ondelete='CASCADE'),
-        comment="上级部门"
-    )
+    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="Department name")
+    dept_key: Mapped[str] = mapped_column(String(50), index=True, nullable=False, comment="Department key")
+    disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether disabled")
+    order: Mapped[int | None] = mapped_column(Integer, comment="Display order")
+    desc: Mapped[str | None] = mapped_column(String(255), comment="Description")
+    owner: Mapped[str | None] = mapped_column(String(255), comment="Manager")
+    phone: Mapped[str | None] = mapped_column(String(255), comment="Contact phone")
+    email: Mapped[str | None] = mapped_column(String(255), comment="Email")
 
     @classmethod
     def dept_order(cls, datas: list, order: str = "order", children: str = "children") -> list:
         """
-        部门排序
-        :param datas:
-        :param order:
-        :param children:
-        :return:
+        Sort departments
+        :param datas: department data
+        :param order: sort field
+        :param children: children field
+        :return: sorted department list
         """
         result = sorted(datas, key=lambda dept: dept[order])
         for item in result:

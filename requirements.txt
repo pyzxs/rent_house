@@ -2,8 +2,10 @@ amqp==5.3.1
 annotated-types==0.7.0
 anyio==4.9.0
 asyncmy==0.2.10
+bcrypt==3.2.0
 billiard==4.2.1
 celery==5.5.0
+cffi==1.17.1
 click==8.1.8
 click-didyoumean==0.3.1
 click-plugins==1.1.1
@@ -18,6 +20,7 @@ markdown-it-py==3.0.0
 mdurl==0.1.2
 passlib==1.7.4
 prompt_toolkit==3.0.50
+pycparser==2.22
 pydantic==2.11.1
 pydantic_core==2.33.0
 Pygments==2.19.1

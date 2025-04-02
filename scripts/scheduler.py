@@ -13,13 +13,13 @@ log_file = os.path.join(BASE_DIR, SCHEDULE_LOG_FILE)
 
 
 def queue():
-    # 启动消息队列
+    # start run message queue worker
     queue_args = ['celery', '--app', 'schedule', 'worker', '-l', 'INFO', '-E', '-P', 'eventlet',
                   '-f', log_file]
     subprocess.check_call(queue_args, cwd=BASE_DIR)
 
 
 def crontab():
-    # 启动定时任务
+    # start run message queue crontab
     cron_args = ['celery', '--app', 'schedule', 'beat', "-l", "INFO", '-f', log_file]
     subprocess.check_call(cron_args, cwd=BASE_DIR)

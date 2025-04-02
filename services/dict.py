@@ -3,8 +3,8 @@
 # @version : 1.0
 # @File    ：dict.py
 # @Author  ：ben
-# @Date    ：2025/3/6 上午10:19 
-# @desc    : 数据字典
+# @Date    ：2025/3/6 10:19 
+# @desc    : Data dictionary
 from core.exception import CustomException
 from models.data_dict import DictType, DictDetails
 from utils import helpers
@@ -12,10 +12,10 @@ from utils import helpers
 
 def get_dict_list(db, u):
     """
-    获取字典列表
-    :param db:
-    :param u:
-    :return:
+    Get dictionary list
+    :param db: database session
+    :param u: user object
+    :return: dictionary list
     """
     dict_tp_list = db.query(DictType).all()
     result = []
@@ -52,7 +52,7 @@ def get_dict_details(db, tp):
 def create_dict_type(db, u, form_data):
     cnt = db.query(DictType).where(DictType.tp == form_data.tp).count()
     if cnt:
-        raise CustomException("已存在该标识不能创建")
+        raise CustomException("Identifier already exists, cannot create")
     dt = DictType(**form_data.model_dump())
     db.add(dt)
     db.commit()
@@ -60,7 +60,11 @@ def create_dict_type(db, u, form_data):
 
 def get_dict_single_default(db, tp, label):
     """
-    获取字典某个详情
+    Get single dictionary detail
+    :param db: database session
+    :param tp: dictionary type
+    :param label: dictionary label
+    :return: dictionary value
     """
     dict_tp = db.query(DictType).filter(DictType.tp == tp).first()
     if not dict_tp:
@@ -74,7 +78,7 @@ def get_dict_single_default(db, tp, label):
 def update_dict_type(db, u, data_id, form_data):
     dt = db.query(DictType).get(data_id)
     if not dt:
-        raise CustomException("不存在该字典类型")
+        raise CustomException("Dictionary type does not exist")
     dt.tp = form_data.tp
     dt.disabled = form_data.disabled
     dt.remark = form_data.remark
@@ -85,7 +89,7 @@ def update_dict_type(db, u, data_id, form_data):
 def create_dict_detail(db, u, data_id, form_data):
     dict_type = db.query(DictType).get(data_id)
     if not dict_type:
-        raise CustomException("未获取到字典类型")
+        raise CustomException("Dictionary type not found")
     data = form_data.model_dump()
     data['dict_type_id'] = data_id
     dt = DictDetails(**data)
@@ -96,7 +100,7 @@ def create_dict_detail(db, u, data_id, form_data):
 def update_dict_detail(db, u, data_id, form_data):
     de = db.query(DictDetails).get(data_id)
     if not de:
-        raise CustomException("字典详情不存在")
+        raise CustomException("Dictionary detail does not exist")
     de.value = form_data.value
     de.disabled = form_data.disabled
     de.label = form_data.label
@@ -107,10 +111,13 @@ def update_dict_detail(db, u, data_id, form_data):
 
 def delete_dict_detail(db, u, detail_id):
     """
-    删除字典详情
+    Delete dictionary detail
+    :param db: database session
+    :param u: user object
+    :param detail_id: detail id to delete
     """
     de = db.query(DictDetails).get(detail_id)
     if not de:
-        raise CustomException("字典详情不存在")
+        raise CustomException("Dictionary detail does not exist")
     db.delete(de)
     db.commit()

@@ -3,33 +3,32 @@
 # @version        : 1.0
 # @Create Time    : 2025/2/15
 # @File           : settings.py
-# @desc           : 消息队列配置
+# @desc           : Message queue configuration
 from celery.schedules import crontab
-
 from config import settings
 
-# Broker，中间件，进行消息传输，使用Redis
+# Broker, middleware for message transmission, using Redis
 broker_url = settings.SCHEDULE_BROKER_URL
-# Backend，结果后端，使用Redis
+# Backend, result backend, using Redis
 result_backend = settings.SCHEDULE_RESULT_URL
-# 任务过期时间
+# Task expiration time
 result_expires = settings.SCHEDULE_RESULT_EXPIRE
-# 时区配置
+# Timezone configuration
 timezone = 'Asia/Shanghai'
-# 是否在启动期间重试代理连接
+# Whether to retry broker connection during startup
 broker_connection_retry_on_startup = True
-# 任务内容序列
+# Task content serialization
 task_serializer = 'json'
-# 结果序列化方案
+# Result serialization scheme
 result_serializer = 'json'
 
 accept_content = ['json', 'msgpack']
 
-imports = (  # 导入的任务模块
+imports = (  # Imported task modules
     'schedule.tasks'
 )
 
-# 定时任务配置信息
+# Scheduled task configuration
 beat_schedule = {
     'test_task_run': {
         'task': 'schedules.tasks.test_task_run',
