@@ -13,6 +13,7 @@ Tech Stack:
 
 ### 1. Project Installation
 ```shell
+# python 3.12.8
 pip install -r requirement.txt
 ```
 

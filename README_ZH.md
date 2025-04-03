@@ -12,6 +12,7 @@
 
 ### 一、项目安装
 ```shell
+# python 3.12.8
 pip install -r requirement.txt
 ```
 
