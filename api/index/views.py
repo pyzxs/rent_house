@@ -18,12 +18,12 @@ from services import auth
 indexAPI = APIRouter()
 
 
-@indexAPI.post("/login", response_model=request_schemas.Token, name="文档登录认证", include_in_schema=False)
+@indexAPI.post("/login", response_model=request_schemas.Token, name="doc login check", include_in_schema=False)
 async def api_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     token = auth.check_user_login(db, data)
     return {"access_token": token, "token_type": "bearer"}
 
 
-@indexAPI.post("/user/login", summary="用户登录系统")
+@indexAPI.post("/user/login", summary="user login")
 async def user_login(request: Request, form_data: request_schemas.LoginUser, db: Session = Depends(get_db)):
     return await auth.check_telephone_login(db, request, form_data)

@@ -8,6 +8,7 @@ from datetime import datetime
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 import models.user
@@ -31,18 +32,23 @@ def create_user(db, form_data):
             form_data.password = settings.DEFAULT_PASSWORD
 
     form_data.password = User.get_password_hash(form_data.password)
-    user = User(**form_data.model_dump(exclude={'role_ids', "dept_ids"}))
+    try:
+        user = User(**form_data.model_dump(exclude={'role_ids', "dept_ids"}))
 
-    if form_data.role_ids:
-        roles = db.query(Role).filter(Role.id.in_(form_data.role_ids)).all()
-        for role in roles:
-            user.roles.add(role)
-    if form_data.dept_ids:
-        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
-        for dept in departments:
-            user.departments.add(dept)
-    db.add(user)
-    db.commit()
+        if form_data.role_ids:
+            roles = db.query(Role).filter(Role.id.in_(form_data.role_ids)).all()
+            for role in roles:
+                user.roles.add(role)
+        if form_data.dept_ids:
+            departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+            for dept in departments:
+                user.departments.add(dept)
+
+        db.add(user)
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise CustomException(str(e))
 
 
 def put_user(db, u, data_id, form_data):
@@ -53,7 +59,6 @@ def put_user(db, u, data_id, form_data):
     exists = db.query(User).filter(User.id != data_id, User.telephone == form_data.telephone).count()
     if exists:
         raise CustomException("This phone number is already used by another user")
-
     if not form_data.password:
         if settings.DEFAULT_PASSWORD == "0":
             form_data.password = form_data.telephone[5:12]
@@ -61,24 +66,28 @@ def put_user(db, u, data_id, form_data):
             form_data.password = settings.DEFAULT_PASSWORD
 
     form_data.password = User.get_password_hash(form_data.password)
-    data = form_data.model_dump(exclude={'role_ids', 'dept_ids'})
+    try:
+        data = form_data.model_dump(exclude={'role_ids', 'dept_ids'})
 
-    for key, value in data.items():
-        if key in User.get_column_attrs():
-            setattr(user, key, value)  # 使用setattr动态设置属性
+        for key, value in data.items():
+            if key in User.get_column_attrs():
+                setattr(user, key, value)  # 使用setattr动态设置属性
 
-    if form_data.role_ids:
-        roles = db.query(Role).filter(Role.id.in_(form_data.role_ids)).all()
         user.roles.clear()
-        for role in roles:
-            user.roles.add(role)
-
-    if form_data.dept_ids:
-        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
         user.departments.clear()
-        for dept in departments:
-            user.departments.add(dept)
-    db.commit()
+        if form_data.role_ids:
+            roles = db.query(Role).filter(Role.id.in_(form_data.role_ids)).all()
+            for role in roles:
+                user.roles.add(role)
+
+        if form_data.dept_ids:
+            departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+            for dept in departments:
+                user.departments.add(dept)
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise CustomException(str(e))
 
 
 def get_user_list(db, u, params):
@@ -127,60 +136,71 @@ def create_role(db, u, form_data):
     if exists:
         raise CustomException(f"Role {form_data.role_key} already exists")
 
-    role = Role(**form_data.model_dump(exclude={'menu_ids', 'dept_ids'}))
-    if form_data.menu_ids:
+    try:
+        role = Role(**form_data.model_dump(exclude={'menu_ids', 'dept_ids'}))
         role.menus.clear()
-        menus = db.query(Menu).filter(Menu.id.in_(form_data.menu_ids)).all()
-        for menu in menus:
-            role.menus.add(menu)
-
-    if form_data.dept_ids:
         role.departments.clear()
-        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
-        for dept in departments:
-            role.departments.add(dept)
+        if form_data.menu_ids:
+            menus = db.query(Menu).filter(Menu.id.in_(form_data.menu_ids)).all()
+            for menu in menus:
+                role.menus.add(menu)
 
-    db.add(role)
-    db.commit()
+        if form_data.dept_ids:
+            departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+            for dept in departments:
+                role.departments.add(dept)
+
+        db.add(role)
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise CustomException(str(e))
 
 
 def put_role(db, u, data_id, form_data):
     role = db.query(Role).filter_by(id=data_id).first()
     if not role:
         raise CustomException("Role does not exist")
+
     exists = db.query(Role).filter(Role.id != data_id, Role.role_key == form_data.role_key).count()
     if exists:
         raise CustomException(f"Role {form_data.role_key} already exists")
 
-    data = form_data.model_dump(exclude={'menu_ids', 'dept_ids'})
-    for key, value in data.items():
-        if key in Role.get_column_attrs():
-            setattr(role, key, value)  # 使用setattr动态设置属性
-
-    if form_data.menu_ids:
+    try:
+        data = form_data.model_dump(exclude={'menu_ids', 'dept_ids'})
+        for key, value in data.items():
+            if key in Role.get_column_attrs():
+                setattr(role, key, value)  # 使用setattr动态设置属性
         role.menus.clear()
-        menus = db.query(Menu).filter(Menu.id.in_(form_data.menu_ids)).all()
-        for menu in menus:
-            role.menus.add(menu)
-
-    if form_data.dept_ids:
         role.departments.clear()
-        departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
-        for dept in departments:
-            role.departments.add(dept)
+        if form_data.menu_ids:
+            menus = db.query(Menu).filter(Menu.id.in_(form_data.menu_ids)).all()
+            for menu in menus:
+                role.menus.add(menu)
 
-    db.commit()
+        if form_data.dept_ids:
+            departments = db.query(Department).filter(Department.id.in_(form_data.dept_ids)).all()
+            for dept in departments:
+                role.departments.add(dept)
+
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise CustomException(str(e))
 
 
 def delete_role(db, u, data_id):
     role = db.query(Role).options(joinedload(Role.menus)).get(data_id)
     if role is None:
         raise CustomException("Role does not exist")
-
-    role.departments.clear()
-    role.menus.clear()
-    db.delete(role)
-    db.commit()
+    try:
+        role.departments.clear()
+        role.menus.clear()
+        db.delete(role)
+        db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise CustomException(str(e))
 
 
 def get_menu_list(db, u, mode: int):
@@ -232,6 +252,49 @@ def get_user_menu_tree(db, user: User):
     return Menu.menus_order(menus, 'index')
 
 
+def create_menu(db, u, form_data):
+    if form_data.parent_id == 0:
+        form_data.parent_id = None
+
+    exists = db.query(Menu).filter(Menu.path == form_data.path).count()
+    if exists:
+        raise CustomException("路由地址不能重复")
+
+    menu = Menu(**form_data.model_dump())
+    db.add(menu)
+    db.commit()
+
+
+def delete_menu(db, u, data_id):
+    menu = db.query(Menu).get(data_id)
+    if not menu:
+        raise CustomException("菜单不存在")
+    exists = db.query(Menu).filter(Menu.parent_id == menu.id).count()
+    if exists:
+        raise CustomException("存在子菜单，不能删除")
+    db.delete(menu)
+    db.commit()
+
+
+def put_menu(db, u, data_id, form_data):
+    menu = db.query(Menu).filter_by(id=data_id).first()
+    if not menu:
+        raise CustomException("该菜单不存在")
+
+    exists = db.query(Menu).filter(Menu.path == form_data.path, Menu.id != data_id).count()
+    if exists:
+        raise CustomException("路由地址不能重复")
+
+    if form_data.parent_id == 0:
+        form_data.parent_id = None
+
+    data = form_data.model_dump()
+    for key, value in data.items():
+        if key in Menu.get_column_attrs():
+            setattr(menu, key, value)
+    db.commit()
+
+
 async def get_department_list(db, u, mode):
     """
     Get department list information
@@ -265,6 +328,9 @@ def create_department(db, u, form_data):
     :param u: user object
     :return: None
     """
+    if form_data.parent_id == 0:
+        form_data.parent_id = None
+
     dp = Department(**form_data.model_dump())
     db.add(dp)
     db.commit()
@@ -274,11 +340,15 @@ def put_department(db, u, data_id, form_data):
     dp = db.query(Department).get(data_id)
     if not dp:
         raise CustomException("Department does not exist, cannot edit")
+
+    if form_data.parent_id == 0:
+        form_data.parent_id = None
+
     obj_dict = jsonable_encoder(form_data)
     for key, value in obj_dict.items():
         setattr(dp, key, value)
 
-    db.flush(dp)
+    db.commit()
 
 
 def delete_department(db, ids, v_soft):

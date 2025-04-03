@@ -4,7 +4,6 @@
 # @Create Time    : 2025/2/16
 # @File           : initialize.py
 # @desc           : 数据初始化
-from sqlalchemy import text
 
 from api.admin.logics import system
 from api.admin.schemas import system_schemas
@@ -23,19 +22,24 @@ def migrate():
     print("create super user")
     create_super_admin()
 
+
 def create_system_department():
-    department = {"name": "Headquarters", "dept_key":"head", "disabled": False, "order": 0, "desc": "Headquarters department"}
+    department = {"name": "Headquarters", "dept_key": "head", "disabled": False, "order": 0,
+                  "desc": "Headquarters department"}
     form_data = system_schemas.Department(**department)
     system.create_department(db, None, form_data)
-    
+
+
 def create_super_role():
-    role = {"role_key": "admin", "name": "super admin", "disabled": False, "order": 0,"is_admin":1, "desc": "super admin role","menu_ids":[1,2,3,4], "dept_ids":[1]}
+    role = {"role_key": "admin", "name": "super admin", "disabled": False, "order": 0, "is_admin": 1,
+            "desc": "super admin role", "dept_ids": [1]}
     form_data = system_schemas.RoleRequest(**role)
     system.create_role(db, None, form_data)
 
 
 def create_super_admin():
-    user = {"telephone": '13800000000', 'name': 'super admin', 'nickname': "super admin", 'is_staff': True,'role_ids': [1], 'dept_ids': [1]}
+    user = {"telephone": '13800000000', 'name': 'super admin', 'nickname': "super admin", 'is_staff': True,
+            'role_ids': [1], 'dept_ids': [1]}
     form_data = system_schemas.UserRequest(**user)
     system.create_user(db, form_data)
 
@@ -63,6 +67,7 @@ def create_system_menus():
         "icon": "ant-design:menu-outlined",
         "path": "/system/menu",
         "component": "views/system/menu/index",
+        "perms": "system.menu.index",
         "menu_type": 1,
         "order": 1,
         "parent_id": 1
@@ -77,6 +82,7 @@ def create_system_menus():
         "icon": "ant-design:user-outlined",
         "path": "/system/role",
         "component": "views/system/role/index",
+        "perms": "system.role.index",
         "menu_type": 1,
         "order": 2,
         "parent_id": 1
@@ -91,9 +97,40 @@ def create_system_menus():
         "icon": "ant-design:team-outlined",
         "path": "/system/user",
         "component": "views/system/user/index",
+        "perms": "system.user.index",
         "menu_type": 1,
         "order": 3,
         "parent_id": 1
     }
     user_form = system_schemas.Menu(**user_menu)
+    system.create_menu(db, None, user_form)
+
+    # 部门管理
+    dept_menu = {
+        "title": "department manage",
+        "name": "SystemDepartment",
+        "icon": "ant-design:team-outlined",
+        "path": "/system/department",
+        "component": "views/system/department/index",
+        "perms": "system.department.index",
+        "menu_type": 1,
+        "order": 4,
+        "parent_id": 1
+    }
+    user_form = system_schemas.Menu(**dept_menu)
+    system.create_menu(db, None, user_form)
+
+    # 字典管理
+    dict_menu = {
+        "title": "dict manage",
+        "name": "SystemDict",
+        "icon": "ant-design:team-outlined",
+        "path": "/system/dict",
+        "component": "views/system/dict/index",
+        "perms": "system.dict.index",
+        "menu_type": 1,
+        "order": 5,
+        "parent_id": 1
+    }
+    user_form = system_schemas.Menu(**dict_menu)
     system.create_menu(db, None, user_form)

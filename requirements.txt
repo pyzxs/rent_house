@@ -17,8 +17,10 @@ greenlet==3.1.1
 h11==0.14.0
 idna==3.10
 kombu==5.5.2
+loguru==0.7.3
 markdown-it-py==3.0.0
 mdurl==0.1.2
+orjson==3.10.16
 passlib==1.7.4
 prompt_toolkit==3.0.50
 pyasn1==0.4.8
@@ -31,6 +33,7 @@ PyMySQL==1.1.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 python-jose==3.4.0
+python-multipart==0.0.20
 redis==5.2.1
 rich==14.0.0
 rsa==4.9
@@ -46,3 +49,4 @@ tzdata==2025.2
 uvicorn==0.34.0
 vine==5.1.0
 wcwidth==0.2.13
+win32_setctime==1.2.0

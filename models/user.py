@@ -74,6 +74,13 @@ class Menu(BaseModel):
         default=False
     )
 
+    parent_id: Mapped[Union[int, None]] = mapped_column(
+        Integer,
+        ForeignKey("menus.id"),
+        nullable=True,
+        comment="parent id"
+    )
+
     @staticmethod
     def menus_order(datas: list, order: str = "order", children: str = "children") -> list:
         """
@@ -95,11 +102,12 @@ class Role(BaseModel):
     __table_args__ = ({'comment': 'Roles table'})
     role_key: Mapped[str] = mapped_column(String(50), index=True, comment="Role key")
     name: Mapped[str] = mapped_column(String(50), index=True, comment="Name")
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether super role")
     disabled: Mapped[bool] = mapped_column(Boolean, default=False, comment="Whether disabled")
     data_range: Mapped[int] = mapped_column(Integer, default=4, comment="Data permission scope")
     order: Mapped[int or None] = mapped_column(Integer, default=0, comment="Sort order")
     desc: Mapped[str or None] = mapped_column(String(255), nullable=True, comment="Description")
-    is_admin: Mapped[bool] = mapped_column(Boolean, comment="Whether super role", default=False)
+
 
     menus: Mapped[set[Menu]] = relationship(secondary=role_menus)
     departments: Mapped[set["Department"]] = relationship(secondary=role_departments)
@@ -128,6 +136,7 @@ class User(BaseModel):
         :param password: plain password
         :return: hashed password
         """
+        return pwd_context.hash(password)
 
     @staticmethod
     def verify_password(password: str, hashed_password: str) -> bool:
@@ -137,6 +146,7 @@ class User(BaseModel):
         :param hashed_password: hashed password
         :return: verification result
         """
+        return pwd_context.verify(password, hashed_password)
 
     @property
     def is_admin(self) -> bool:
@@ -159,6 +169,13 @@ class Department(BaseModel):
     owner: Mapped[str | None] = mapped_column(String(255), comment="Manager")
     phone: Mapped[str | None] = mapped_column(String(255), comment="Contact phone")
     email: Mapped[str | None] = mapped_column(String(255), comment="Email")
+
+    parent_id: Mapped[Union[int, None]] = mapped_column(
+        Integer,
+        ForeignKey("departments.id"),
+        nullable=True,
+        comment="parent id"
+    )
 
     @classmethod
     def dept_order(cls, datas: list, order: str = "order", children: str = "children") -> list:

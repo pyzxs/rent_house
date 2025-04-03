@@ -81,7 +81,8 @@ class Role(BaseModel):
     data_range: int = Field(default=0, description="Role data scope (reserved)")
     disabled: bool = Field(default=False, description="Whether disabled")
     order: int = Field(default=0, description="Sort order")
-    desc: str = Field(description="Description")
+    desc: str = Field(default='',description="Description")
+    is_admin: bool = Field(default=False, description="is super admin")
 
 
 class RoleRequest(Role):
@@ -101,14 +102,14 @@ class Department(BaseModel):
     parent_id: int | None = None
 
 
-class DeptSimpleOut(Department):
+class DepartmentResponse(Department):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    create_datetime: DatetimeStr
-    update_datetime: DatetimeStr
+    created_at: DatetimeStr
+    updated_at: DatetimeStr
 
 
-class DeptTreeListOut(DeptSimpleOut):
+class DeptTreeListOut(DepartmentResponse):
     model_config = ConfigDict(from_attributes=True)
     children: list[dict] = []
 

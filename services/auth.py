@@ -52,9 +52,9 @@ def create_token(payload: dict, expires: timedelta = None):
     #TODO The input time is UTC datetime type, but the decoded time is local timestamp
     """
     if expires:
-        expire = datetime.utcnow() + expires
+        expire = datetime.now() + expires
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload.update({"exp": expire})
     encoded_jwt = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
