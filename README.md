@@ -1,8 +1,15 @@
+[English](README.md) | [中文](README_ZH.md)
+
 ## House Rental Project
 
 rent house project
 
-[English](README.md) | [中文](README_ZH.md)
+Tech Stack:
+- database: mysql
+- cache: redis
+- mq: redis+celery
+- crontab: redis+celery
+
 
 ### 1. Project Installation
 ```shell

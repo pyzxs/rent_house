@@ -1,7 +1,14 @@
+[English](README.md) | [中文](README_ZH.md)
+
 ## 房屋出租项目
 
 房屋出租项目
-[English](README.md) | [中文](README_ZH.md)
+
+技术栈：
+- 数据库： mysql
+- 缓存： redis
+- 消息队列： redis+celery
+- 定时任务： redis+celery
 
 ### 一、项目安装
 ```shell
