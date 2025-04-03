@@ -5,11 +5,14 @@
 # @Author  ：ben
 # @Date    ：2025/4/2 13:36 
 # @desc    : utility functions
-
+import inspect
+import json
 import random
 import re
 import string
 from typing import List, Union, Any, Callable
+
+from config import settings
 
 
 def valid_password(password: str) -> Union[str, bool]:
@@ -73,3 +76,23 @@ def dict_to_list_by_key(options: List[dict], key: str) -> list:
     """
     return list(map(lambda item: item[key], options))
 
+async def cache_forever(rd, func: Callable, args: tuple, expire=settings.CACHE_EXPIRE) -> Any:
+    """
+    store to cache
+    :param expire:
+    :param rd: redis handler
+    :param func: invoker func
+    :param args: func params
+    :return:
+    """
+    mod = inspect.getmodule(func)
+    module_name = mod.__name__ if mod else ''
+    cache_key = f"cache:{module_name}.{func.__name__}"
+    cache_data = await rd.get(cache_key)
+    if not cache_data:
+        data = await func(*args)
+        if data:
+            await rd.set(cache_key, json.dumps(data), ex=expire)
+        return data
+    else:
+        return json.loads(cache_data)
