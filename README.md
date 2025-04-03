@@ -14,7 +14,7 @@ Tech Stack:
 ### 1. Project Installation
 ```shell
 # python 3.12.8
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Project Configuration
@@ -62,6 +62,12 @@ Initialize the super administrator and admin role
 ```shell
 python main.py migrate
 ```
+super admin
+```shell
+username: 13800000000
+password: 123456
+```
+
 
 Start the message queue
 

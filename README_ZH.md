@@ -13,7 +13,7 @@
 ### 一、项目安装
 ```shell
 # python 3.12.8
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 ### 二、配置项目
@@ -66,7 +66,11 @@ python main.py run
 ```shell
 python main.py migrate
 ```
-
+超级管理员
+```shell
+username: 13800000000
+password: 123456
+```
 启动消息队列
 ```shell
 python main.py queue
