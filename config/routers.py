@@ -14,5 +14,5 @@ urlpatterns = [
     {"ApiRouter": adminSystemAPI, "prefix": "/api/admin/system", "tags": ["Admin-System Manage"]},
 
     # index module route
-    {"ApiRouter": indexAPI, "prefix": "/api", "tags": ["Admin-Index Manage"]},
+    {"ApiRouter": indexAPI, "prefix": "/api", "tags": ["Index Manage"]},
 ]

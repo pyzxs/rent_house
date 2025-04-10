@@ -15,6 +15,16 @@ class LoginUser(BaseModel):
     method: str = Field(default='0', description="method： 0、telephone")
 
 
+class RegisterUser(BaseModel):
+    name: str = Field(..., min_length=3, max_length=50, description="name")
+    nickname: str = Field(default='', description="nickname")
+    gender: bool = Field(default=0, description="gender")
+    telephone: str = Field(..., description="telephone")
+    is_staff: bool = Field(default=False, description="is company staff")
+    password: str = Field(..., min_length=6, max_length=20, description="password")
+    confirm_password: str = Field(..., description="confirm password")
+
+
 class Token(BaseModel):
     access_token: str = Field(..., description='login Token')
     token_type: str = Field(..., description="jwt token_type")

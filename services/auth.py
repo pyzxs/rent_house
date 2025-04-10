@@ -232,3 +232,23 @@ async def reset_user_current_password(db, u, form_data):
 def get_user_by_telephone(db: Session, telephone: str) -> Union[User, None]:
     """Get user object by phone number"""
     return db.query(User).filter(User.telephone == telephone).first()
+
+
+def check_user_register(db: Session, form_data):
+    # 验证密码一致性
+    if form_data.password != form_data.confirm_password:
+        raise HTTPException(status_code=400, detail="password and confirm_password do not match")
+
+    # 检查用户是否存在
+
+    if get_user_by_telephone(db, form_data.telephone):
+        raise HTTPException(status_code=400, detail="telephone already exists")
+
+    data = form_data.model_dump(exclude={"confirm_password"})
+    data['password'] = User.get_password_hash(form_data.password)
+    data['disabled'] = False
+    data['name'] = form_data.name
+    data['nickname'] = data['name']
+    user = User(**data)
+    db.add(user)
+    db.commit()

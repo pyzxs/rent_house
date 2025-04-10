@@ -13,6 +13,7 @@ from starlette.requests import Request
 
 from api.index.schemas import request_schemas
 from core.database import get_db, get_cache, get_async_db
+from core.response import SuccessResponse
 from services import auth
 
 indexAPI = APIRouter()
@@ -27,3 +28,11 @@ async def api_login(data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 @indexAPI.post("/user/login", summary="user login")
 async def user_login(request: Request, form_data: request_schemas.LoginUser, db: Session = Depends(get_db)):
     return await auth.check_telephone_login(db, request, form_data)
+
+
+@indexAPI.post("/user/register", summary="user register")
+async def user_register(
+        form_data: request_schemas.RegisterUser,
+        db: Session = Depends(get_db)
+):
+    return SuccessResponse(auth.check_user_register(db, form_data), "user register success!")
